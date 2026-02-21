@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>System Audit Timesheet Dashboard 2569</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e1a;--sf:#111827;--sf2:#1a2235;--bd:#1e2d45;--ac:#00d4ff;--ac2:#7c3aed;--ac3:#f59e0b;--gn:#10b981;--rd:#ef4444;--tx:#e2e8f0;--mu:#64748b;--gr:rgba(0,212,255,.04);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'IBM Plex Sans Thai',sans-serif;background:var(--bg);color:var(--tx);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(var(--gr) 1px,transparent 1px),linear-gradient(90deg,var(--gr) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1440px;margin:0 auto;padding:28px 24px;}
+
+/* Header */
+header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px;}
+.hl .badge{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;color:var(--ac);text-transform:uppercase;margin-bottom:6px;}
+.hl h1{font-size:24px;font-weight:700;color:#fff;}
+.hl .sub{font-size:12px;color:var(--mu);margin-top:4px;}
+.ha{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;border-radius:8px;padding:8px 16px;font-size:12px;cursor:pointer;transition:all .2s;font-family:'IBM Plex Sans Thai',sans-serif;border:none;font-weight:600;white-space:nowrap;}
+.btn-primary{background:var(--ac);color:#000;}.btn-primary:hover{background:#00b8dd;}
+.btn-save{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.4);color:var(--gn);}.btn-save:hover{background:rgba(16,185,129,.28);}
+.btn-save:disabled{opacity:.35;cursor:not-allowed;}
+.btn-ghost{background:rgba(255,255,255,.05);border:1px solid var(--bd);color:var(--tx);}.btn-ghost:hover{background:rgba(255,255,255,.1);}
+.btn-danger{background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.3);color:var(--rd);}.btn-danger:hover{background:rgba(239,68,68,.2);}
+.btn-warn{background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.35);color:#f59e0b;}.btn-warn:hover{background:rgba(245,158,11,.22);}
+.btn-sm{padding:5px 11px;font-size:11px;border-radius:6px;}
+
+/* Upload panel */
+.upload-panel{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;margin-bottom:16px;}
+.upload-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px;}
+.ub-label{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;white-space:nowrap;text-transform:uppercase;letter-spacing:1px;}
+.file-drop{flex:1;border:1.5px dashed var(--bd);border-radius:8px;padding:10px 16px;text-align:center;cursor:pointer;transition:all .2s;min-height:42px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:12px;color:var(--mu);}
+.file-drop:hover,.file-drop.drag{border-color:var(--ac);background:rgba(0,212,255,.05);color:var(--ac);}
+.file-drop input{display:none;}
+.upload-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.upload-hint{font-size:11px;color:var(--mu);margin-top:4px;}
+.upload-hint code{background:rgba(0,212,255,.1);color:var(--ac);padding:1px 5px;border-radius:3px;font-family:'IBM Plex Mono',monospace;font-size:10px;}
+
+/* Status */
+.status-bar{display:flex;align-items:center;gap:10px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:9px 14px;margin-bottom:16px;flex-wrap:wrap;}
+.sdot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.dot-gn{background:var(--gn);animation:pulse 2s infinite;}
+.dot-yw{background:#f59e0b;}.dot-rd{background:var(--rd);}.dot-mu{background:var(--mu);}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+.stxt{font-size:12px;color:var(--mu);}.stxt strong{color:var(--tx);}
+.ssep{color:var(--bd);margin:0 2px;}
+
+/* Month chips — always 12 + ALL */
+.chips{display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap;align-items:center;}
+.chip-lbl{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;flex-shrink:0;}
+.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:20px;border:1px solid var(--bd);background:var(--sf);font-size:11px;cursor:pointer;transition:all .2s;font-family:'IBM Plex Mono',monospace;font-weight:500;position:relative;}
+.chip:hover{border-color:var(--ac);}
+.chip.on{background:var(--ac);border-color:var(--ac);color:#000;font-weight:700;}
+.chip-all{background:var(--sf2);}
+.chip.has-data::after{content:'';position:absolute;top:3px;right:3px;width:5px;height:5px;border-radius:50%;background:var(--gn);}
+
+/* Empty state overlay */
+.empty-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(10,14,26,.7);border-radius:12px;gap:8px;z-index:5;pointer-events:none;}
+.empty-overlay.hide{display:none;}
+.empty-icon{font-size:28px;opacity:.4;}
+.empty-txt{font-size:12px;color:var(--mu);text-align:center;}
+
+/* Filters */
+.filters{display:flex;gap:9px;margin-bottom:22px;flex-wrap:wrap;align-items:center;}
+.fg{display:flex;align-items:center;gap:7px;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:6px 11px;}
+.fl{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;white-space:nowrap;}
+select{background:transparent;border:none;color:var(--tx);font-family:'IBM Plex Sans Thai',sans-serif;font-size:12px;cursor:pointer;outline:none;padding:2px 3px;}
+select option{background:var(--sf2);color:var(--tx);}
+
+/* KPIs */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;margin-bottom:20px;}
+.kpi{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:16px;position:relative;overflow:hidden;transition:border-color .2s;}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--kc,var(--ac));}
+.kpi:hover{border-color:rgba(0,212,255,.3);}
+.kpi-lbl{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:1.5px;font-family:'IBM Plex Mono',monospace;margin-bottom:7px;}
+.kpi-val{font-size:26px;font-weight:700;font-family:'IBM Plex Mono',monospace;color:#fff;line-height:1;margin-bottom:3px;}
+.kpi-sub{font-size:11px;color:var(--mu);}
+
+/* Charts */
+.cgrid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;}
+@media(max-width:960px){.cgrid{grid-template-columns:1fr;}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:20px;position:relative;}
+.card-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px;}
+.card-title{font-size:13px;font-weight:600;color:var(--tx);display:flex;align-items:center;gap:7px;}
+.cdot{width:8px;height:8px;border-radius:50%;background:var(--ac);}
+.tg{display:flex;background:rgba(255,255,255,.05);border-radius:6px;padding:3px;gap:2px;flex-wrap:wrap;}
+.tgb{padding:4px 9px;font-size:10px;border-radius:4px;border:none;background:transparent;color:var(--mu);cursor:pointer;transition:all .2s;font-family:'IBM Plex Mono',monospace;}
+.tgb.on{background:var(--ac);color:#000;font-weight:700;}
+
+/* Bar chart */
+.bars{display:flex;flex-direction:column;gap:8px;}
+.bi{display:flex;align-items:center;gap:8px;}
+.bn{font-size:11px;color:var(--mu);width:100px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+.bt{flex:1;height:20px;background:rgba(255,255,255,.04);border-radius:4px;overflow:hidden;}
+.bf{height:100%;border-radius:4px;display:flex;align-items:center;padding-left:7px;font-size:10px;font-family:'IBM Plex Mono',monospace;font-weight:700;color:rgba(0,0,0,.85);transition:width .55s cubic-bezier(.4,0,.2,1);min-width:2px;white-space:nowrap;}
+.bv{font-size:11px;font-family:'IBM Plex Mono',monospace;color:var(--tx);width:46px;text-align:right;flex-shrink:0;}
+
+/* Donut */
+.donut-wrap{display:flex;flex-direction:column;gap:14px;}
+.donut-row{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.d-leg{display:flex;flex-direction:column;gap:6px;flex:1;min-width:140px;}
+.li{display:flex;align-items:center;gap:7px;}
+.ld{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+.ln{font-size:11px;color:var(--tx);flex:1;}
+.lv{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--mu);}
+
+/* Stacked % */
+.pct-sec{margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);}
+.pct-ttl{font-size:10px;color:var(--ac);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;}
+.sl-list{display:flex;flex-direction:column;gap:8px;}
+.sl-row{display:flex;align-items:center;gap:8px;}
+.sl-nm{font-size:10px;color:var(--mu);width:38px;flex-shrink:0;font-family:'IBM Plex Mono',monospace;}
+.sl-bar{flex:1;height:18px;border-radius:4px;overflow:hidden;display:flex;}
+.sl-seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:rgba(0,0,0,.8);overflow:hidden;white-space:nowrap;transition:width .5s;}
+.sl-tot{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--tx);width:40px;text-align:right;flex-shrink:0;}
+
+/* Color legend */
+.leg-pill{margin-top:12px;padding-top:12px;border-top:1px solid var(--bd);}
+.leg-title{font-size:10px;color:var(--ac);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;}
+.leg-items{display:flex;flex-wrap:wrap;gap:6px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--mu);}
+.leg-dot{width:8px;height:8px;border-radius:2px;flex-shrink:0;}
+
+/* Table */
+.tbl-card{grid-column:1/-1;}
+.tbl-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;}
+thead tr{border-bottom:1px solid var(--bd);}
+th{font-size:10px;font-family:'IBM Plex Mono',monospace;color:var(--mu);text-transform:uppercase;letter-spacing:1.2px;padding:7px 9px;text-align:left;white-space:nowrap;}
+th.r{text-align:right;}
+td{padding:8px 9px;font-size:12px;border-bottom:1px solid rgba(30,45,69,.5);}
+td.r{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:11px;}
+tr:hover td{background:rgba(0,212,255,.025);}
+.dbadge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;font-weight:500;}
+.pmini{width:50px;height:3px;background:rgba(255,255,255,.06);border-radius:2px;display:inline-block;vertical-align:middle;margin-left:4px;overflow:hidden;}
+.pmf{height:100%;border-radius:2px;}
+.no-data{text-align:center;padding:32px;color:var(--mu);font-size:13px;}
+
+/* Empty state big */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:var(--mu);}
+.empty-state .ei{font-size:48px;opacity:.3;}
+.empty-state .et{font-size:16px;font-weight:600;color:var(--mu);}
+.empty-state .es{font-size:13px;}
+
+/* Modal */
+.ov{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);z-index:100;display:flex;align-items:center;justify-content:center;padding:16px;}
+.ov.hide{display:none;}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:16px;width:100%;max-width:800px;max-height:90vh;overflow-y:auto;padding:26px;position:relative;}
+.modal h2{font-size:18px;font-weight:700;color:#fff;margin-bottom:4px;}
+.msub{font-size:12px;color:var(--mu);margin-bottom:18px;}
+.mc{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.08);border:none;color:var(--tx);width:30px;height:30px;border-radius:7px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.mc:hover{background:rgba(255,255,255,.15);}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+.ff{display:flex;flex-direction:column;gap:5px;}
+.ff label{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:1px;}
+.ff input,.ff select{background:var(--sf2);border:1px solid var(--bd);border-radius:7px;padding:8px 12px;color:var(--tx);font-size:13px;font-family:'IBM Plex Sans Thai',sans-serif;outline:none;transition:border-color .2s;width:100%;}
+.ff input:focus{border-color:var(--ac);}
+.ff input::placeholder{color:var(--mu);}
+.stit{font-size:10px;color:var(--ac);font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:2px;margin:14px 0 9px;padding-bottom:5px;border-bottom:1px solid var(--bd);}
+.dtbl{width:100%;border-collapse:collapse;}
+.dtbl th{font-size:10px;color:var(--mu);font-family:'IBM Plex Mono',monospace;padding:5px 6px;text-align:center;border-bottom:1px solid var(--bd);}
+.dtbl th:first-child{text-align:left;}
+.dtbl td{padding:3px 2px;border-bottom:1px solid rgba(30,45,69,.4);}
+.dtbl td.dc{font-size:11px;color:var(--tx);padding:3px 7px;white-space:nowrap;}
+.dtbl input{background:var(--sf2);border:1px solid var(--bd);border-radius:4px;padding:4px 5px;color:var(--tx);font-size:11px;font-family:'IBM Plex Mono',monospace;width:54px;outline:none;text-align:right;}
+.dtbl input:focus{border-color:var(--ac);background:rgba(0,212,255,.04);}
+.mact{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;padding-top:14px;border-top:1px solid var(--bd);}
+.mlist{display:flex;flex-direction:column;gap:8px;margin-bottom:14px;}
+.mi{display:flex;align-items:center;justify-content:space-between;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;padding:10px 13px;}
+.mi-nm{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;}
+.mi-st{font-size:11px;color:var(--mu);margin-top:2px;}
+
+/* Toast */
+.toast{position:fixed;bottom:20px;right:20px;background:var(--gn);color:#000;border-radius:10px;padding:10px 16px;font-size:13px;font-weight:600;z-index:999;transform:translateY(70px);opacity:0;transition:all .3s;pointer-events:none;max-width:340px;}
+.toast.show{transform:translateY(0);opacity:1;}
+.toast.err{background:var(--rd);color:#fff;}
+.toast.info{background:var(--sf2);color:var(--tx);border:1px solid var(--bd);}
+
+/* Save banner */
+.save-banner{display:none;background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3);border-radius:10px;padding:10px 16px;margin-bottom:16px;align-items:center;gap:10px;flex-wrap:wrap;}
+.save-banner.show{display:flex;}
+.save-banner-txt{font-size:12px;color:var(--gn);flex:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="hl">
+    <div class="badge">▸ System Audit · Timesheet 2569</div>
+    <h1>Audit Timesheet Dashboard</h1>
+    <div class="sub">Man-days tracking · <span id="rangeSpan">รอข้อมูล</span> · <span id="lastUpd">ยังไม่มีข้อมูล</span></div>
+  </div>
+  <div class="ha">
+    <button class="btn btn-ghost" onclick="openManage()">⚙ จัดการเดือน</button>
+    <button class="btn btn-primary" onclick="openAdd()">＋ เพิ่มเดือน</button>
+  </div>
+</header>
+
+<!-- UPLOAD PANEL -->
+<div class="upload-panel">
+  <div class="upload-top">
+    <span class="ub-label">📂 อัปโหลดข้อมูล</span>
+    <div class="file-drop" id="dropZone" onclick="document.getElementById('fileIn').click()" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+      <input type="file" id="fileIn" accept=".csv" onchange="handleFile(this.files[0])">
+      <span id="dropLabel">📄 คลิกหรือลาก-วางไฟล์ <strong>.CSV</strong> มาที่นี่เพื่อโหลดข้อมูล</span>
+    </div>
+    <div class="upload-actions">
+      <button class="btn btn-save" id="saveBtn" onclick="saveData()" disabled>💾 เซฟข้อมูล</button>
+      <button class="btn btn-warn btn-sm" id="clearBtn" onclick="clearData()">🗑 ล้างข้อมูล</button>
+    </div>
+  </div>
+  <div class="upload-hint">
+    วิธี Export CSV: เปิดไฟล์ใน <strong>Excel</strong> → File → Save As → เลือก <code>CSV (Comma delimited)</code> | หรือ <strong>Google Sheets</strong> → File → Download → CSV
+  </div>
+</div>
+
+<!-- SAVE BANNER -->
+<div class="save-banner" id="saveBanner">
+  <span>💾</span>
+  <span class="save-banner-txt" id="saveBannerTxt">มีข้อมูลที่โหลดแล้ว กดบันทึกเพื่อเก็บไว้ใช้ต่อ</span>
+  <button class="btn btn-save btn-sm" onclick="saveData()">บันทึกเดี๋ยวนี้</button>
+</div>
+
+<!-- STATUS -->
+<div class="status-bar">
+  <div class="sdot dot-mu" id="sdot"></div>
+  <div class="stxt" id="stxt"><strong>รอข้อมูล</strong> · กรุณาอัปโหลดไฟล์ CSV ก่อน</div>
+  <span class="ssep">·</span>
+  <div class="stxt">เดือน: <strong id="sMon">0</strong></div>
+  <span class="ssep">·</span>
+  <div class="stxt">Total: <strong id="sTot">0.00</strong> man-days</div>
+</div>
+
+<!-- MONTH CHIPS — always show all 12 months -->
+<div class="chips" id="chips"></div>
+
+<!-- FILTERS -->
+<div class="filters">
+  <div class="fg">
+    <span class="fl">AUDITOR</span>
+    <select id="audF" onchange="render()">
+      <option value="all">All Auditors</option>
+      <option>JK</option><option>KS</option><option>TN</option><option>SR</option>
+      <option>PA</option><option>WW</option><option>NS</option><option>RS</option><option>NC</option>
+    </select>
+  </div>
+  <div class="fg">
+    <span class="fl">DESCRIPTION</span>
+    <select id="descF" onchange="render()">
+      <option value="all">All Activities</option>
+      <option value="1) Internal Audit">Internal Audit</option>
+      <option value="2) Consulting and Observation Activities">Consulting &amp; Observation</option>
+      <option value="3) Audit Committee Activities">Audit Committee</option>
+      <option value="4) Dep. Management">Dep. Management</option>
+      <option value="5) Company Project">Company Project</option>
+      <option value="6) Training">Training</option>
+      <option value="Annual Leave">Annual Leave</option>
+      <option value="Business Leave">Business Leave</option>
+      <option value="Other Leave">Other Leave</option>
+      <option value="Sick Leave">Sick Leave</option>
+    </select>
+  </div>
+  <button class="btn btn-danger btn-sm" onclick="resetF()">↺ Reset</button>
+</div>
+
+<!-- KPIs -->
+<div class="kpi-grid" id="kpiGrid"></div>
+
+<!-- CHARTS -->
+<div class="cgrid">
+  <!-- Bar -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title"><span class="cdot"></span> Man-days by Auditor</div>
+      <div class="tg" id="barTg"></div>
+    </div>
+    <div class="bars" id="barList"></div>
+    <div class="empty-overlay" id="barEmpty"><div class="empty-icon">📊</div><div class="empty-txt">อัปโหลด CSV เพื่อดูข้อมูล</div></div>
+  </div>
+
+  <!-- Donut + stacked % -->
+  <div class="card">
+    <div class="card-hd">
+      <div class="card-title"><span class="cdot" style="background:var(--ac3)"></span> Activity Distribution</div>
+      <div class="tg">
+        <button class="tgb on" id="dv1" onclick="setDV('donut')">Donut</button>
+        <button class="tgb" id="dv2" onclick="setDV('pct')">% Auditor</button>
+      </div>
+    </div>
+    <div id="donutView">
+      <div class="donut-row">
+        <svg id="donutSvg" width="140" height="140" viewBox="0 0 140 140"></svg>
+        <div class="d-leg" id="donutLeg"></div>
+      </div>
+      <div class="pct-sec" id="mPctSec"></div>
+      <div class="leg-pill" id="colorLeg"></div>
+    </div>
+    <div id="pctView" style="display:none">
+      <div class="pct-ttl">% สัดส่วน Activity ของแต่ละ Auditor</div>
+      <div class="sl-list" id="audPct"></div>
+      <div class="leg-pill" id="colorLeg2"></div>
+    </div>
+    <div class="empty-overlay" id="donutEmpty"><div class="empty-icon">🥧</div><div class="empty-txt">อัปโหลด CSV เพื่อดูข้อมูล</div></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card tbl-card">
+    <div class="card-hd">
+      <div class="card-title"><span class="cdot" style="background:var(--ac2)"></span> Detailed Breakdown</div>
+    </div>
+    <div class="tbl-scroll"><div id="tblBox"></div></div>
+  </div>
+</div>
+
+</div>
+
+<!-- ADD MONTH MODAL -->
+<div class="ov hide" id="addModal">
+  <div class="modal">
+    <button class="mc" onclick="closeAdd()">✕</button>
+    <h2>เพิ่มข้อมูลเดือนใหม่</h2>
+    <div class="msub">กรอก Man-days ของแต่ละ Auditor (หน่วย: วัน)</div>
+    <div class="frow">
+      <div class="ff"><label>ชื่อเดือน (ย่อ) *</label><input id="nKey" placeholder="APR, MAY, JUN..."></div>
+      <div class="ff"><label>ชื่อเต็ม (ไทย)</label><input id="nLbl" placeholder="เมษายน (APR69)"></div>
+    </div>
+    <div class="stit">▸ กรอก Man-days</div>
+    <div style="overflow-x:auto;"><table class="dtbl" id="inTbl"></table></div>
+    <div class="mact">
+      <button class="btn btn-ghost" onclick="closeAdd()">ยกเลิก</button>
+      <button class="btn btn-primary" onclick="saveMonth()">💾 บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- MANAGE MODAL -->
+<div class="ov hide" id="mgModal">
+  <div class="modal">
+    <button class="mc" onclick="closeManage()">✕</button>
+    <h2>จัดการข้อมูลเดือน</h2>
+    <div class="msub">ดูหรือลบข้อมูลที่โหลดมา</div>
+    <div class="mlist" id="mgList"></div>
+    <div class="mact"><button class="btn btn-ghost" onclick="closeManage()">ปิด</button></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ═══════════════ CONSTANTS ═══════════════ */
+const AUD  = ['JK','KS','TN','SR','PA','WW','NS','RS','NC'];
+const DESC = [
+  '1) Internal Audit',
+  '2) Consulting and Observation Activities',
+  '3) Audit Committee Activities',
+  '4) Dep. Management',
+  '5) Company Project',
+  '6) Training',
+  'Annual Leave','Business Leave','Other Leave','Sick Leave'
+];
+const ALL_MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+const MTH_TH = {JAN:'มกราคม',FEB:'กุมภาพันธ์',MAR:'มีนาคม',APR:'เมษายน',MAY:'พฤษภาคม',JUN:'มิถุนายน',JUL:'กรกฎาคม',AUG:'สิงหาคม',SEP:'กันยายน',OCT:'ตุลาคม',NOV:'พฤศจิกายน',DEC:'ธันวาคม'};
+const DCOL = ['#00d4ff','#7c3aed','#f59e0b','#10b981','#f97316','#ec4899','#6366f1','#84cc16','#06b6d4','#e11d48'];
+const MCOL = ['#00d4ff','#f59e0b','#7c3aed','#10b981','#f97316','#ec4899','#6366f1','#84cc16','#00d4ff','#f59e0b','#7c3aed','#10b981'];
+const SK = 'audit_dash_v5';
+
+/* ═══════════════ STATE ═══════════════ */
+let months   = [];   // months with actual data
+let selMon   = 'all';
+let barMode  = 'all';
+let dv       = 'donut';
+let unsaved  = false; // track unsaved state
+
+/* ═══════════════ STORAGE ═══════════════ */
+function loadFromStorage(){
+  try{
+    const raw = localStorage.getItem(SK);
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(Array.isArray(saved) && saved.length > 0){
+        months = saved;
+        setStatus('gn','<strong>โหลดข้อมูลที่บันทึกไว้</strong> · '+months.map(m=>m.key).join(', '));
+        document.getElementById('lastUpd').textContent = 'จากข้อมูลที่บันทึกไว้';
+        return true;
+      }
+    }
+  }catch(e){}
+  return false;
+}
+
+function saveData(){
+  if(months.length === 0){ showToast('ไม่มีข้อมูลให้บันทึก',true); return; }
+  try{
+    localStorage.setItem(SK, JSON.stringify(months));
+    unsaved = false;
+    updateSaveBanner();
+    showToast('✓ บันทึกข้อมูลสำเร็จ · '+months.length+' เดือน');
+    setStatus('gn','<strong>บันทึกแล้ว ✓</strong> · '+months.map(m=>m.key).join(', '));
+  }catch(e){
+    showToast('❌ บันทึกไม่สำเร็จ: '+e.message, true);
+  }
+}
+
+function clearData(){
+  if(!confirm('ล้างข้อมูลทั้งหมดออกจาก Dashboard หรือไม่?\n(ไฟล์ต้นฉบับไม่ได้รับผลกระทบ)')) return;
+  months = [];
+  selMon = 'all'; barMode = 'all';
+  unsaved = false;
+  updateSaveBanner();
+  document.getElementById('saveBtn').disabled = true;
+  document.getElementById('dropLabel').innerHTML = '📄 คลิกหรือลาก-วางไฟล์ <strong>.CSV</strong> มาที่นี่เพื่อโหลดข้อมูล';
+  document.getElementById('fileIn').value = '';
+  setStatus('mu','<strong>รอข้อมูล</strong> · กรุณาอัปโหลดไฟล์ CSV ก่อน');
+  document.getElementById('lastUpd').textContent = 'ยังไม่มีข้อมูล';
+  document.getElementById('rangeSpan').textContent = 'รอข้อมูล';
+  render();
+  showToast('ล้างข้อมูลแล้ว', false);
+}
+
+function updateSaveBanner(){
+  const banner = document.getElementById('saveBanner');
+  const txt = document.getElementById('saveBannerTxt');
+  if(unsaved && months.length > 0){
+    banner.classList.add('show');
+    txt.textContent = '⚠️ มีข้อมูลใหม่ที่ยังไม่ได้บันทึก — กดบันทึกเพื่อเก็บข้อมูลไว้ใช้ครั้งต่อไป';
+  } else {
+    banner.classList.remove('show');
+  }
+}
+
+/* ═══════════════ FILE UPLOAD ═══════════════ */
+function onDrag(e,over){ e.preventDefault(); document.getElementById('dropZone').classList.toggle('drag',over); }
+function onDrop(e){ e.preventDefault(); onDrag(e,false); const f=e.dataTransfer.files[0]; if(f)handleFile(f); }
+
+function handleFile(file){
+  if(!file) return;
+  const ext = file.name.split('.').pop().toLowerCase();
+  if(ext !== 'csv'){
+    showToast('❌ รองรับเฉพาะไฟล์ .CSV เท่านั้น\nหาก Excel: File → Save As → CSV', true);
+    return;
+  }
+  setStatus('yw','⏳ กำลังอ่านไฟล์...');
+  const r = new FileReader();
+  r.onload = e => {
+    try{ parseCSV(e.target.result, file.name); }
+    catch(err){ setStatus('rd','❌ '+err.message); showToast('❌ '+err.message, true); }
+  };
+  r.readAsText(file, 'UTF-8');
+}
+
+/* ═══════════════ CSV PARSER ═══════════════ */
+function parseCSV(text, fname){
+  const lines = text.split(/\r?\n/).map(l => splitCSV(l));
+  if(lines.length < 4) throw new Error('ไฟล์ CSV มีข้อมูลไม่ครบ (ต้องมีอย่างน้อย 4 แถว)');
+
+  const row2 = lines[1] || [];
+  const row3 = lines[2] || [];
+
+  // Find auditor start columns from row2: "1.JK", "2. KS", etc.
+  const audCols = {};
+  row2.forEach((cell, ci) => {
+    const m = cell.match(/\d+\.\s*([A-Z]{2,3})/i);
+    if(m) audCols[m[1].toUpperCase()] = ci;
+  });
+  if(Object.keys(audCols).length === 0)
+    throw new Error('ไม่พบชื่อ Auditor ใน Row 2 (ต้องเป็น "1.JK", "2. KS" ...)');
+
+  // Desc keyword matcher
+  const descKW = [
+    [/internal audit/i,'1) Internal Audit'],
+    [/consulting/i,'2) Consulting and Observation Activities'],
+    [/audit committee/i,'3) Audit Committee Activities'],
+    [/dep.*manag|^4\)/i,'4) Dep. Management'],
+    [/company project/i,'5) Company Project'],
+    [/training/i,'6) Training'],
+    [/annual leave/i,'Annual Leave'],
+    [/business leave/i,'Business Leave'],
+    [/other leave/i,'Other Leave'],
+    [/sick leave/i,'Sick Leave'],
+  ];
+  function matchDesc(raw){
+    for(const [re,full] of descKW){ if(re.test(raw)) return full; }
+    return null;
+  }
+
+  // Each auditor block = 12 cols (JAN offset 0 … DEC offset 11)
+  const newMonthsMap = {};
+  ALL_MONTHS.forEach((mk, mi) => {
+    const mdata = {};
+    DESC.forEach(d => { mdata[d] = new Array(AUD.length).fill(0); });
+
+    lines.slice(3).forEach(row => {
+      const descRaw = (row[0] || '').trim();
+      const fullDesc = matchDesc(descRaw);
+      if(!fullDesc) return;
+      AUD.forEach((a, ai) => {
+        const base = audCols[a];
+        if(base === undefined) return;
+        const col = base + mi;
+        const v = parseFloat((row[col] || '').replace(/,/g, '')) || 0;
+        mdata[fullDesc][ai] = Math.round(v * 10000) / 10000;
+      });
+    });
+
+    const tot = DESC.reduce((s,d) => s + mdata[d].reduce((ss,v) => ss+v, 0), 0);
+    if(tot > 0) newMonthsMap[mk] = { key:mk, label:(MTH_TH[mk]||mk)+' ('+mk+'69)', data:mdata };
+  });
+
+  const added = Object.values(newMonthsMap);
+  if(added.length === 0) throw new Error('ไม่พบข้อมูล Man-days ในไฟล์ (ตรวจสอบ format ของ CSV)');
+
+  // Merge into global months
+  added.forEach(nm => {
+    const idx = months.findIndex(m => m.key === nm.key);
+    if(idx >= 0) months[idx] = nm;
+    else months.push(nm);
+  });
+  // Sort by ALL_MONTHS order
+  months.sort((a,b) => ALL_MONTHS.indexOf(a.key) - ALL_MONTHS.indexOf(b.key));
+
+  // Update UI
+  const keys = added.map(m => m.key).join(', ');
+  setStatus('gn','<strong>✓ โหลดสำเร็จ</strong> · พบข้อมูล: '+keys);
+  document.getElementById('lastUpd').textContent = fname + ' · ' + new Date().toLocaleTimeString('th-TH');
+  document.getElementById('dropLabel').innerHTML = '✅ <strong>'+fname+'</strong> · '+added.length+' เดือน — คลิกเพื่อโหลดไฟล์ใหม่';
+  document.getElementById('saveBtn').disabled = false;
+  unsaved = true;
+  updateSaveBanner();
+
+  selMon = 'all'; barMode = 'all';
+  render();
+  showToast('✓ โหลด '+fname+' สำเร็จ · '+added.length+' เดือน');
+}
+
+function splitCSV(line){
+  const res=[]; let cur='', inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){ inQ=!inQ; continue; }
+    if(c===','&&!inQ){ res.push(cur.trim()); cur=''; continue; }
+    cur+=c;
+  }
+  res.push(cur.trim());
+  return res;
+}
+
+/* ═══════════════ HELPERS ═══════════════ */
+function hasData(){ return months.length > 0; }
+function activeMon(){ return selMon==='all' ? months : months.filter(m=>m.key===selMon); }
+function getRecs(){
+  const af=document.getElementById('audF').value;
+  const df=document.getElementById('descF').value;
+  const recs=[];
+  activeMon().forEach(m=>{
+    DESC.forEach(d=>{
+      if(df!=='all'&&df!==d) return;
+      AUD.forEach((a,ai)=>{
+        if(af!=='all'&&af!==a) return;
+        recs.push({month:m.key, auditor:a, desc:d, value:(m.data[d]||[])[ai]||0});
+      });
+    });
+  });
+  return recs;
+}
+function mTot(m){ return DESC.reduce((s,d)=>s+AUD.reduce((ss,_,ai)=>ss+((m.data[d]||[])[ai]||0),0),0); }
+function setStatus(col,html){
+  document.getElementById('sdot').className='sdot dot-'+col;
+  document.getElementById('stxt').innerHTML=html;
+}
+
+/* ═══════════════ RENDER ═══════════════ */
+function render(){
+  renderChips();
+  renderBarTg();
+  const recs = getRecs();
+  renderKPI(recs);
+  renderBar(recs);
+  renderDonut(recs);
+  renderPct(recs);
+  renderTable(recs);
+
+  // Status counts
+  const hasMonths = months.filter(m => mTot(m) > 0);
+  document.getElementById('sMon').textContent = hasMonths.length;
+  const tot = months.reduce((s,m)=>s+mTot(m),0);
+  document.getElementById('sTot').textContent = tot.toFixed(2);
+  if(hasMonths.length > 0){
+    const ks = hasMonths.map(m=>m.key);
+    document.getElementById('rangeSpan').textContent = ks.length>1 ? ks[0]+'–'+ks[ks.length-1] : ks[0];
+  }
+
+  // Show/hide empty overlays
+  const empty = !hasData() || activeMon().length===0 || recs.reduce((s,r)=>s+r.value,0)===0;
+  document.getElementById('barEmpty').classList.toggle('hide', !empty);
+  document.getElementById('donutEmpty').classList.toggle('hide', !empty);
+}
+
+/* ── Month chips: always show all 12 ── */
+function renderChips(){
+  const dataKeys = new Set(months.map(m=>m.key));
+  let h = `<span class="chip-lbl">MONTH:</span>`;
+  h += `<div class="chip chip-all ${selMon==='all'?'on':''}" onclick="setSel('all')">ALL</div>`;
+  ALL_MONTHS.forEach(mk => {
+    const has = dataKeys.has(mk);
+    h += `<div class="chip ${has?'has-data':''} ${selMon===mk?'on':''}" onclick="setSel('${mk}')" title="${has?'มีข้อมูล':'ยังไม่มีข้อมูล'}">${mk}</div>`;
+  });
+  document.getElementById('chips').innerHTML = h;
+}
+function setSel(k){ selMon=k; barMode=k; render(); }
+
+/* ── Bar toggle: only months with data ── */
+function renderBarTg(){
+  let h = `<button class="tgb ${barMode==='all'?'on':''}" onclick="setBM('all')">ALL</button>`;
+  months.forEach(m => {
+    h += `<button class="tgb ${barMode===m.key?'on':''}" onclick="setBM('${m.key}')">${m.key}</button>`;
+  });
+  document.getElementById('barTg').innerHTML = h;
+}
+function setBM(m){ barMode=m; renderBarTg(); renderBar(getRecs()); }
+
+/* ── KPIs ── */
+function renderKPI(recs){
+  if(!hasData()){
+    document.getElementById('kpiGrid').innerHTML = `
+      <div class="kpi" style="--kc:#64748b"><div class="kpi-lbl">Total Man-days</div><div class="kpi-val" style="font-size:18px;color:var(--mu)">—</div><div class="kpi-sub">อัปโหลดไฟล์ CSV ก่อน</div></div>
+      <div class="kpi" style="--kc:#64748b"><div class="kpi-lbl">Internal Audit</div><div class="kpi-val" style="font-size:18px;color:var(--mu)">—</div><div class="kpi-sub">ยังไม่มีข้อมูล</div></div>
+      <div class="kpi" style="--kc:#64748b"><div class="kpi-lbl">Leave Days</div><div class="kpi-val" style="font-size:18px;color:var(--mu)">—</div><div class="kpi-sub">ยังไม่มีข้อมูล</div></div>
+      <div class="kpi" style="--kc:#64748b"><div class="kpi-lbl">Active Auditors</div><div class="kpi-val" style="font-size:18px;color:var(--mu)">—</div><div class="kpi-sub">ยังไม่มีข้อมูล</div></div>`;
+    return;
+  }
+  const tot=recs.reduce((s,r)=>s+r.value,0);
+  const bm={};recs.forEach(r=>{bm[r.month]=(bm[r.month]||0)+r.value;});
+  const aud=recs.filter(r=>r.desc==='1) Internal Audit').reduce((s,r)=>s+r.value,0);
+  const lv=recs.filter(r=>['Annual Leave','Business Leave','Other Leave','Sick Leave'].includes(r.desc)).reduce((s,r)=>s+r.value,0);
+  const actA=new Set(recs.filter(r=>r.value>0).map(r=>r.auditor)).size;
+  const mKPIs=activeMon().map((m,i)=>({label:m.key+' days',value:(bm[m.key]||0).toFixed(2),sub:m.label,c:MCOL[ALL_MONTHS.indexOf(m.key)]}));
+  const kpis=[
+    {label:'Total Man-days',value:tot.toFixed(2),sub:'รวมทุก Activity',c:'#00d4ff'},
+    ...mKPIs,
+    {label:'Internal Audit',value:aud.toFixed(2),sub:'audit days',c:'#10b981'},
+    {label:'Leave Days',value:lv.toFixed(2),sub:'all leaves',c:'#ef4444'},
+    {label:'Active Auditors',value:actA,sub:'มีข้อมูล',c:'#f97316'},
+  ];
+  document.getElementById('kpiGrid').innerHTML=kpis.map(k=>`
+    <div class="kpi" style="--kc:${k.c}">
+      <div class="kpi-lbl">${k.label}</div>
+      <div class="kpi-val">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+/* ── Bar ── */
+function renderBar(recs){
+  if(!hasData()){ document.getElementById('barList').innerHTML=''; return; }
+  const af=document.getElementById('audF').value;
+  const df=document.getElementById('descF').value;
+  const tM=barMode==='all'?months:months.filter(m=>m.key===barMode);
+  const byA={};
+  AUD.forEach((a,ai)=>{
+    if(af!=='all'&&af!==a) return;
+    let v=0;
+    tM.forEach(m=>{DESC.forEach(d=>{if(df!=='all'&&df!==d)return;v+=(m.data[d]||[])[ai]||0;});});
+    byA[a]=v;
+  });
+  const max=Math.max(...Object.values(byA),0.01);
+  const sorted=Object.entries(byA).sort((a,b)=>b[1]-a[1]);
+  const mi=ALL_MONTHS.indexOf(barMode);
+  const col=barMode==='all'?'#00d4ff':MCOL[mi>=0?mi:0];
+  document.getElementById('barList').innerHTML=sorted.map(([a,v])=>`
+    <div class="bi">
+      <div class="bn">${AUD.indexOf(a)+1}. ${a}</div>
+      <div class="bt"><div class="bf" style="width:${(v/max*100).toFixed(1)}%;background:${col}">${v>=1?v.toFixed(2):''}</div></div>
+      <div class="bv">${v.toFixed(2)}</div>
+    </div>`).join('');
+}
+
+/* ── Donut ── */
+function renderDonut(recs){
+  if(!hasData()){
+    document.getElementById('donutSvg').innerHTML='<circle cx="70" cy="70" r="52" fill="none" stroke="#1e2d45" stroke-width="22"/>';
+    document.getElementById('donutLeg').innerHTML='';
+    document.getElementById('mPctSec').innerHTML='';
+    document.getElementById('colorLeg').innerHTML='';
+    return;
+  }
+  const bd={};recs.forEach(r=>{bd[r.desc]=(bd[r.desc]||0)+r.value;});
+  const tot=Object.values(bd).reduce((s,v)=>s+v,0)||1;
+  const ents=Object.entries(bd).filter(([,v])=>v>0).sort((a,b)=>b[1]-a[1]);
+  const cx=70,cy=70,r=52,ir=30;
+  let ang=-Math.PI/2,paths='';
+  ents.forEach(([d,v])=>{
+    const a=(v/tot)*2*Math.PI,ea=ang+a;
+    const x1=cx+r*Math.cos(ang),y1=cy+r*Math.sin(ang);
+    const x2=cx+r*Math.cos(ea),y2=cy+r*Math.sin(ea);
+    const ix1=cx+ir*Math.cos(ea),iy1=cy+ir*Math.sin(ea);
+    const ix2=cx+ir*Math.cos(ang),iy2=cy+ir*Math.sin(ang);
+    const lg=a>Math.PI?1:0;
+    const col=DCOL[DESC.indexOf(d)%DCOL.length];
+    paths+=`<path d="M${x1},${y1} A${r},${r} 0 ${lg} 1 ${x2},${y2} L${ix1},${iy1} A${ir},${ir} 0 ${lg} 0 ${ix2},${iy2} Z" fill="${col}" opacity=".9" stroke="#111827" stroke-width="1.5"/>`;
+    ang=ea;
+  });
+  paths+=`<text x="70" y="66" text-anchor="middle" fill="#e2e8f0" font-size="14" font-family="IBM Plex Mono" font-weight="700">${tot.toFixed(0)}</text>`;
+  paths+=`<text x="70" y="80" text-anchor="middle" fill="#64748b" font-size="8" font-family="IBM Plex Mono">days</text>`;
+  document.getElementById('donutSvg').innerHTML=paths;
+  document.getElementById('donutLeg').innerHTML=ents.slice(0,8).map(([d,v])=>{
+    const col=DCOL[DESC.indexOf(d)%DCOL.length];
+    return `<div class="li"><div class="ld" style="background:${col}"></div><div class="ln">${d.replace(/^\d+\)\s*/,'').replace(' and ',' & ')}</div><div class="lv">${v.toFixed(2)} (${(v/tot*100).toFixed(0)}%)</div></div>`;
+  }).join('');
+
+  // Per-month stacked %
+  const actM=activeMon();
+  const df=document.getElementById('descF').value;
+  const af=document.getElementById('audF').value;
+  let mHtml='';
+  if(actM.length>1){
+    mHtml='<div class="pct-ttl">% สัดส่วน Activity แต่ละเดือน</div><div class="sl-list">';
+    actM.forEach(m=>{
+      const mT=DESC.reduce((s,d)=>{
+        if(df!=='all'&&df!==d)return s;
+        return s+AUD.reduce((ss,a,ai)=>{if(af!=='all'&&af!==a)return ss;return ss+((m.data[d]||[])[ai]||0);},0);
+      },0)||1;
+      const segs=DESC.map((d,di)=>{
+        if(df!=='all'&&df!==d)return '';
+        const v=AUD.reduce((s,a,ai)=>{if(af!=='all'&&af!==a)return s;return s+((m.data[d]||[])[ai]||0);},0);
+        if(v===0)return '';
+        const pct=(v/mT*100).toFixed(1);
+        return `<div class="sl-seg" style="width:${pct}%;background:${DCOL[di%DCOL.length]}" title="${d.replace(/^\d+\)\s*/,'')}: ${v.toFixed(2)}d (${pct}%)">${parseFloat(pct)>8?pct+'%':''}</div>`;
+      }).join('');
+      mHtml+=`<div class="sl-row"><div class="sl-nm">${m.key}</div><div class="sl-bar">${segs}</div><div class="sl-tot">${mT.toFixed(0)}d</div></div>`;
+    });
+    mHtml+='</div>';
+  }
+  document.getElementById('mPctSec').innerHTML=mHtml;
+
+  const legHTML='<div class="leg-title">Activity Colors</div><div class="leg-items">'+
+    DESC.map((d,i)=>`<div class="leg-item"><div class="leg-dot" style="background:${DCOL[i]}"></div><span>${d.replace(/^\d+\)\s*/,'').replace(' and ',' & ')}</span></div>`).join('')+
+  '</div>';
+  document.getElementById('colorLeg').innerHTML=legHTML;
+  document.getElementById('colorLeg2').innerHTML=legHTML;
+}
+
+/* ── % Auditor ── */
+function renderPct(recs){
+  if(!hasData()){ document.getElementById('audPct').innerHTML='<div class="no-data">ยังไม่มีข้อมูล</div>'; return; }
+  const df=document.getElementById('descF').value;
+  const af=document.getElementById('audF').value;
+  const fA=af==='all'?AUD:[af];
+  const actM=activeMon();
+  let html='';
+  fA.forEach(a=>{
+    const ai=AUD.indexOf(a);
+    const vals={};let tot=0;
+    DESC.forEach(d=>{
+      if(df!=='all'&&df!==d)return;
+      let v=0;actM.forEach(m=>{v+=(m.data[d]||[])[ai]||0;});
+      vals[d]=v;tot+=v;
+    });
+    if(tot===0)return;
+    const segs=Object.entries(vals).filter(([,v])=>v>0).map(([d,v])=>{
+      const pct=(v/tot*100).toFixed(1);
+      const col=DCOL[DESC.indexOf(d)%DCOL.length];
+      return `<div class="sl-seg" style="width:${pct}%;background:${col}" title="${d.replace(/^\d+\)\s*/,'')}: ${v.toFixed(2)}d (${pct}%)">${parseFloat(pct)>9?pct+'%':''}</div>`;
+    }).join('');
+    html+=`<div class="sl-row"><div class="sl-nm" style="width:40px">${a}</div><div class="sl-bar">${segs}</div><div class="sl-tot">${tot.toFixed(1)}d</div></div>`;
+  });
+  document.getElementById('audPct').innerHTML=html||'<div class="no-data">ไม่มีข้อมูลในช่วงที่เลือก</div>';
+}
+
+function setDV(v){
+  dv=v;
+  document.getElementById('dv1').className='tgb'+(v==='donut'?' on':'');
+  document.getElementById('dv2').className='tgb'+(v==='pct'?' on':'');
+  document.getElementById('donutView').style.display=v==='donut'?'':'none';
+  document.getElementById('pctView').style.display=v==='pct'?'':'none';
+}
+
+/* ── Table ── */
+function renderTable(recs){
+  if(!hasData()){
+    document.getElementById('tblBox').innerHTML=`
+      <div class="empty-state">
+        <div class="ei">📋</div>
+        <div class="et">ยังไม่มีข้อมูล</div>
+        <div class="es">อัปโหลดไฟล์ CSV เพื่อดูตารางข้อมูลละเอียด</div>
+      </div>`;
+    return;
+  }
+  const af=document.getElementById('audF').value;
+  const df=document.getElementById('descF').value;
+  const fA=af==='all'?AUD:[af];
+  const fD=df==='all'?DESC:[df];
+  const actM=activeMon();
+  if(recs.reduce((s,r)=>s+r.value,0)===0){
+    document.getElementById('tblBox').innerHTML='<div class="no-data">ไม่มีข้อมูลในช่วงที่เลือก</div>';
+    return;
+  }
+  const maxV=Math.max(...recs.map(r=>r.value),0.01);
+  let gT=0;
+  const rows=[];
+  fD.forEach(d=>{
+    const col=DCOL[DESC.indexOf(d)%DCOL.length];
+    let rT=0;
+    const cells=fA.map(a=>{const ai=AUD.indexOf(a);let v=0;actM.forEach(m=>{v+=(m.data[d]||[])[ai]||0;});rT+=v;return v;});
+    if(rT===0&&df==='all')return;
+    gT+=rT; rows.push({d,col,sn:d.replace(/^\d+\)\s*/,''),cells,rT});
+  });
+  const gTv=gT||1;
+  let h=`<table><thead><tr><th>Activity</th>${fA.map(a=>`<th class="r">${a}</th>`).join('')}<th class="r">Total</th><th class="r">%</th></tr></thead><tbody>`;
+  rows.forEach(({col,sn,cells,rT})=>{
+    const pct=(rT/gTv*100).toFixed(1);
+    h+=`<tr><td><span class="dbadge" style="background:${col}22;color:${col}">${sn}</span></td>
+      ${cells.map(v=>`<td class="r">${v>0?v.toFixed(2)+'<span class="pmini"><span class="pmf" style="width:${(v/maxV*100).toFixed(0)}%;background:${col}"></span></span>':'<span style="color:#334155">—</span>'}</td>`).join('')}
+      <td class="r" style="font-weight:600">${rT.toFixed(2)}</td>
+      <td class="r" style="color:${col};font-weight:700">${pct}%</td></tr>`;
+  });
+  const tots=fA.map(a=>{const ai=AUD.indexOf(a);let v=0;fD.forEach(d=>{actM.forEach(m=>{v+=(m.data[d]||[])[ai]||0;});});return v;});
+  const gTr=tots.reduce((s,v)=>s+v,0);
+  h+=`<tr style="border-top:1px solid var(--ac);background:rgba(0,212,255,.04)">
+    <td style="font-weight:700;color:var(--ac)">TOTAL</td>
+    ${tots.map(v=>`<td class="r" style="font-weight:600">${v.toFixed(2)}</td>`).join('')}
+    <td class="r" style="font-weight:700;color:var(--ac)">${gTr.toFixed(2)}</td>
+    <td class="r" style="color:var(--ac);font-weight:700">100%</td>
+  </tr></tbody></table>`;
+  document.getElementById('tblBox').innerHTML=h;
+}
+
+function resetF(){
+  document.getElementById('audF').value='all';
+  document.getElementById('descF').value='all';
+  selMon='all'; barMode='all';
+  render();
+}
+
+/* ═══════════════ ADD MONTH MODAL ═══════════════ */
+function openAdd(){
+  document.getElementById('nKey').value='';
+  document.getElementById('nLbl').value='';
+  const th=`<thead><tr><th>Activity / Auditor</th>${AUD.map(a=>`<th>${a}</th>`).join('')}</tr></thead>`;
+  const tb=DESC.map((d,di)=>`<tr><td class="dc">${d.replace(/^\d+\)\s*/,'')}</td>${AUD.map((_,ai)=>`<td><input type="number" id="i_${di}_${ai}" value="0" min="0" step="0.25"></td>`).join('')}</tr>`).join('');
+  document.getElementById('inTbl').innerHTML=th+'<tbody>'+tb+'</tbody>';
+  document.getElementById('addModal').classList.remove('hide');
+}
+function closeAdd(){ document.getElementById('addModal').classList.add('hide'); }
+function saveMonth(){
+  const k=document.getElementById('nKey').value.trim().toUpperCase().replace(/\s/g,'');
+  const lb=document.getElementById('nLbl').value.trim();
+  if(!k){ showToast('กรุณาระบุชื่อเดือน',true); return; }
+  if(!ALL_MONTHS.includes(k)){ showToast('ชื่อเดือนต้องเป็น JAN FEB MAR APR MAY JUN JUL AUG SEP OCT NOV DEC',true); return; }
+  if(months.find(m=>m.key===k)){ showToast('มีข้อมูลเดือน '+k+' อยู่แล้ว',true); return; }
+  const data={};
+  DESC.forEach((d,di)=>{ data[d]=AUD.map((_,ai)=>parseFloat(document.getElementById(`i_${di}_${ai}`)?.value)||0); });
+  months.push({key:k, label:lb||(MTH_TH[k]||k)+' ('+k+'69)', data});
+  months.sort((a,b)=>ALL_MONTHS.indexOf(a.key)-ALL_MONTHS.indexOf(b.key));
+  unsaved=true; updateSaveBanner();
+  document.getElementById('saveBtn').disabled=false;
+  closeAdd(); selMon=k; barMode=k; render();
+  showToast('✓ เพิ่มเดือน '+k+' สำเร็จ');
+}
+
+/* ═══════════════ MANAGE MODAL ═══════════════ */
+function openManage(){ renderMgList(); document.getElementById('mgModal').classList.remove('hide'); }
+function closeManage(){ document.getElementById('mgModal').classList.add('hide'); }
+function renderMgList(){
+  if(months.length===0){
+    document.getElementById('mgList').innerHTML='<div class="no-data">ยังไม่มีข้อมูลเดือน</div>';
+    return;
+  }
+  document.getElementById('mgList').innerHTML=months.map(m=>{
+    const t=mTot(m);
+    return `<div class="mi">
+      <div><span class="mi-nm">${m.key}</span>
+      <div class="mi-st">${m.label} · ${t.toFixed(2)} man-days รวม</div></div>
+      <div><button class="btn btn-danger btn-sm" onclick="delMon('${m.key}')">🗑 ลบ</button></div>
+    </div>`;
+  }).join('');
+}
+function delMon(k){
+  if(!confirm('ลบข้อมูลเดือน "'+k+'" ออกจาก Dashboard?')) return;
+  months=months.filter(m=>m.key!==k);
+  if(selMon===k){ selMon='all'; barMode='all'; }
+  unsaved=true; updateSaveBanner();
+  if(months.length===0){ document.getElementById('saveBtn').disabled=true; }
+  renderMgList(); render();
+  showToast('ลบเดือน '+k+' แล้ว');
+}
+
+/* ═══════════════ TOAST ═══════════════ */
+function showToast(msg,err=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show'+(err?' err':'');
+  setTimeout(()=>{ t.className='toast'; },3500);
+}
+
+/* ═══════════════ MODAL BACKDROP ═══════════════ */
+['addModal','mgModal'].forEach(id=>{
+  document.getElementById(id).addEventListener('click',e=>{ if(e.target.id===id) document.getElementById(id).classList.add('hide'); });
+});
+
+/* ═══════════════ INIT ═══════════════ */
+function init(){
+  // ไม่โหลดอัตโนมัติ — ต้องอัปโหลดไฟล์ก่อนถึงจะแสดงค่า
+  // ถ้ามีข้อมูลบันทึกไว้ แจ้งให้รู้แต่ไม่โหลดเอง
+  try{
+    const raw = localStorage.getItem(SK);
+    if(raw){
+      const saved = JSON.parse(raw);
+      if(Array.isArray(saved) && saved.length > 0){
+        document.getElementById('dropLabel').innerHTML =
+          '📂 มีข้อมูลที่บันทึกไว้ ('+saved.map(m=>m.key).join(', ')+') · คลิกเพื่ออัปโหลดไฟล์ใหม่ หรือ <u style="cursor:pointer;color:var(--ac)" onclick="loadSaved()">โหลดข้อมูลเดิม</u>';
+      }
+    }
+  }catch(e){}
+  render();
+}
+
+function loadSaved(){
+  const hasSaved = loadFromStorage();
+  if(hasSaved){
+    document.getElementById('saveBtn').disabled = false;
+    document.getElementById('dropLabel').innerHTML = '📂 โหลดข้อมูลที่บันทึกไว้แล้ว · คลิกเพื่ออัปโหลดไฟล์ใหม่';
+    render();
+    showToast('✓ โหลดข้อมูลที่บันทึกไว้สำเร็จ');
+  }
+}
+
+init();
+</script>
+</body>
+</html>
